@@ -57,7 +57,7 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
           <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
           <div className="flex gap-2">
             {post.categories.map((category) => {
-              return <span>{category}</span>;
+              return <span key={category}>{category}</span>;
             })}
           </div>
         </div>

@@ -51,7 +51,7 @@ const NewsIndex = () => {
         <ul className="mt-4">
           {posts.map((post) => {
             return (
-              <li className="p-6 mb-8 border">
+              <li className="p-6 mb-8 border" key={post.id}>
                 <Link href={`/post/${post.id}`}>
                   <div className="flex justify-between">
                     <time>
@@ -59,7 +59,7 @@ const NewsIndex = () => {
                     </time>
                     <div className="flex gap-2">
                       {post.categories.map((category: string) => {
-                        return <span>{category}</span>;
+                        return <span key={category}>{category}</span>;
                       })}
                     </div>
                   </div>
