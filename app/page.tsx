@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../constants";
-import { Post } from "@/types/posts";
+import { Post } from "@/_types/post";
 import Link from "next/link";
 
 const NewsIndex = () => {

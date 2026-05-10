@@ -1,7 +1,7 @@
 "use client";
 
 import { API_BASE_URL } from "@/constants";
-import { Post } from "@/types/posts";
+import { Post } from "@/_types/post";
 import Image from "next/image";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
