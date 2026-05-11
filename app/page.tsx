@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../constants";
-import { Post } from "@/_types/post";
 import Link from "next/link";
+import { MicroCmsPost } from "@/_types/MicroCmsPost";
 
 const NewsIndex = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<MicroCmsPost[]>([]);
   const [loading, setLoading] = useState<Boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +62,7 @@ const NewsIndex = () => {
                       {new Date(post.createdAt).toLocaleDateString("ja-JP")}
                     </time>
                     <div className="flex gap-2">
-                      {post.categories.map((category: string) => {
+                      {post.categories.map((category) => {
                         return <span key={category.id}>{category.name}</span>;
                       })}
                     </div>
