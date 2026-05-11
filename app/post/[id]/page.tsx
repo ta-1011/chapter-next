@@ -25,7 +25,7 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
             },
           }
         );
-        const data = await res.json(); //詳細ページはリスト形式APIではなく、単一記事取得APIのためdataで。
+        const data = (await res.json()) as MicroCmsPost; //詳細ページはリスト形式APIではなく、単一記事取得APIのためdataで。
         setPost(data);
       } catch (error) {
         setError("記事の取得に失敗しました。");
@@ -58,7 +58,7 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
     <>
       <div className="max-w-200 mx-auto py-10">
         <div className="mt-8">
-          <Image src={post.thumbnail?.url} alt="" width={600} height={200} />
+          <Image src={post.thumbnail.url} alt="" width={600} height={200} />
         </div>
         <div className="flex justify-between pt-4">
           <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
