@@ -33,7 +33,7 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
       }
     };
     fetchPosts();
-  }, []);
+  }, [id]);
 
   if (loading) {
     return <p>記事を読み込み中です。</p>;
