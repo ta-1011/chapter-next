@@ -20,7 +20,8 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
           `https://h18qquhz1u.microcms.io/api/v1/posts/${id}`,
           {
             headers: {
-              "X-MICROCMS-API-KEY": "ym9HZGPqRwxa2tI0Bsym3XLS7MWz7IzNC08s",
+              "X-MICROCMS-API-KEY": process.env
+                .NEXT_PUBLIC_microCMS_API_KEY as string,
             },
           }
         );
