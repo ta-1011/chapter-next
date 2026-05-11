@@ -1,7 +1,7 @@
 "use client";
 
 import { API_BASE_URL } from "@/constants";
-import { Post } from "@/_types/post";
+import { MicroCmsPost } from "@/_types/MicroCmsPost";
 import Image from "next/image";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
@@ -9,24 +9,30 @@ import { use, useEffect, useState } from "react";
 const Post = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
 
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<MicroCmsPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchPosts = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/posts/${id}`);
-        const data = await res.json();
-        setPost(data.post);
-        console.log(data);
+        const res = await fetch(
+          `https://h18qquhz1u.microcms.io/api/v1/posts/${id}`,
+          {
+            headers: {
+              "X-MICROCMS-API-KEY": "ym9HZGPqRwxa2tI0Bsym3XLS7MWz7IzNC08s",
+            },
+          }
+        );
+        const data = await res.json(); //詳細ページはリスト形式APIではなく、単一記事取得APIのためdataで。
+        setPost(data);
       } catch (error) {
         setError("記事の取得に失敗しました。");
       } finally {
         setLoading(false);
       }
     };
-    fetchPost();
+    fetchPosts();
   }, []);
 
   if (loading) {
@@ -51,13 +57,13 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
     <>
       <div className="max-w-200 mx-auto py-10">
         <div className="mt-8">
-          <Image src={post.thumbnailUrl} alt="" width={800} height={400} />
+          <Image src={post.thumbnail?.url} alt="" width={600} height={200} />
         </div>
         <div className="flex justify-between pt-4">
           <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
           <div className="flex gap-2">
             {post.categories.map((category) => {
-              return <span key={category}>{category}</span>;
+              return <span key={category.id}>{category.name}</span>;
             })}
           </div>
         </div>

@@ -13,9 +13,13 @@ const NewsIndex = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/posts`);
-        const data = await res.json();
-        setPosts(data.posts); //ここのpostsはjsonデータのposts
+        const res = await fetch("https://h18qquhz1u.microcms.io/api/v1/posts", {
+          headers: {
+            "X-MICROCMS-API-KEY": "ym9HZGPqRwxa2tI0Bsym3XLS7MWz7IzNC08s",
+          },
+        });
+        const { contents } = await res.json(); //microCMSのリスト形式API(contents)を分割代入
+        setPosts(contents);
       } catch (error) {
         setError("記事の取得に失敗しました。");
       } finally {
@@ -46,9 +50,9 @@ const NewsIndex = () => {
 
   return (
     <>
-      <div className="max-w-200 mx-auto py-10">
-        <h1 className="text-left text-4xl">記事一覧</h1>
-        <ul className="mt-4">
+      <div className=" py-10">
+        <h1 className="max-w-200 mx-auto text-left text-4xl">記事一覧</h1>
+        <ul className="mt-8 max-w-200 mx-auto">
           {posts.map((post) => {
             return (
               <li className="p-6 mb-8 border" key={post.id}>
@@ -59,7 +63,7 @@ const NewsIndex = () => {
                     </time>
                     <div className="flex gap-2">
                       {post.categories.map((category: string) => {
-                        return <span key={category}>{category}</span>;
+                        return <span key={category.id}>{category.name}</span>;
                       })}
                     </div>
                   </div>
