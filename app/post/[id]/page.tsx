@@ -25,7 +25,7 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
             },
           }
         );
-        const data = (await res.json()) as MicroCmsPost; //詳細ページはリスト形式APIではなく、単一記事取得APIのためdataで。
+        const data: MicroCmsPost = await res.json(); //詳細ページはリスト形式APIではなく、単一記事取得APIのためdataで。
         setPost(data);
       } catch (error) {
         setError("記事の取得に失敗しました。");
