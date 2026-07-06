@@ -104,3 +104,23 @@ export const PUT = async (
       return NextResponse.json({ message: error.message }, { status: 400 });
   }
 };
+
+// ----- 記事削除 -----
+export const DELETE = async (
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const { id } = await params;
+  try {
+    // idを指定して、Postを削除
+    await prisma.post.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+    return NextResponse.json({ message: "OK" }, { status: 200 });
+  } catch (error) {
+    if (error instanceof Error)
+      return NextResponse.json({ message: error.message }, { status: 400 });
+  }
+};
