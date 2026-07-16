@@ -32,14 +32,13 @@ const Page = () => {
         categories,
       };
 
-      await fetch(`/api/admin/posts/${id}`),
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "/application/json",
-          },
-          body: JSON.stringify(body),
-        };
+      await fetch(`/api/admin/posts/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
 
       alert("記事を更新しました。");
     } catch (error) {
@@ -60,7 +59,7 @@ const Page = () => {
         method: "DELETE",
       });
       alert("記事を削除しました。");
-      router.push("/admin/posts/"); // useRouterを使うことで、confirmがtrueになれば該当ページに戻る
+      router.push("/admin/posts"); // useRouterを使うことで、confirmがtrueになれば該当ページに戻る
     } catch (error) {
       console.error("記事の削除に失敗しました。");
       alert("記事の削除に失敗しました。");

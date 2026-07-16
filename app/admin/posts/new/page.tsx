@@ -42,7 +42,7 @@ const page = () => {
       // NextResponseから作成した記事のIDを取得
       const data: CreatePostResponse = await res.json();
       // 作成が終えたらその記事idページに遷移します。
-      router.push(`admin/posts/" ${data.id}`);
+      router.push(`/admin/posts/${data.id}`);
       alert("記事を作成しました。");
     } catch (error) {
       console.error("記事の作成に失敗しました。");
