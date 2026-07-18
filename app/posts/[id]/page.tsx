@@ -1,7 +1,6 @@
 "use client";
 
 import { API_BASE_URL } from "@/constants";
-import { MicroCmsPost } from "@/_types/MicroCmsPost";
 import Image from "next/image";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
@@ -52,7 +51,12 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
     <>
       <div className="max-w-200 mx-auto py-10">
         <div className="mt-8">
-          <Image src={post.thumbnail.url} alt="" width={600} height={200} />
+          <Image
+            src={post.thumbnailUrl.trim()}
+            alt=""
+            width={600}
+            height={200}
+          />
         </div>
         <div className="flex justify-between pt-4">
           <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
