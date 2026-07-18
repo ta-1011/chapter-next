@@ -5,11 +5,12 @@ import { MicroCmsPost } from "@/_types/MicroCmsPost";
 import Image from "next/image";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
+import { PostShowResponse } from "@/app/api/posts/[id]/route";
 
 const Post = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
 
-  const [post, setPost] = useState<MicroCmsPost | null>(null);
+  const [post, setPost] = useState<PostShowResponse["post"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
