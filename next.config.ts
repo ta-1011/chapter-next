@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
         hostname: "placehold.jp",
       },
       { protocol: "https", hostname: "images.microcms-assets.io" },
+      { protocol: "https", hostname: "picsum.photos" },
     ],
   },
 };
