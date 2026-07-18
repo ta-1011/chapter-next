@@ -58,6 +58,7 @@ export const GET = async (
         { status: 404 }
       );
     }
+
     // レスポンスを返す
     return NextResponse.json<PostShowResponse>({ post }, { status: 200 });
   } catch (error) {
