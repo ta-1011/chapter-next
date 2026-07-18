@@ -57,8 +57,12 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
         <div className="flex justify-between pt-4">
           <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
           <div className="flex gap-2">
-            {post.categories.map((category) => {
-              return <span key={category.id}>{category.name}</span>;
+            {post.postCategories.map((postCategory) => {
+              return (
+                <span key={postCategory.category.id}>
+                  {postCategory.category.name}
+                </span>
+              );
             })}
           </div>
         </div>
