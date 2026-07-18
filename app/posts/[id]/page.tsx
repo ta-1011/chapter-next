@@ -14,20 +14,13 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 非同期処理なので、初回レンダリング時点ではまだ記事データが存在しないため、(null)のどちらも許可する必要
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch(
-          `https://h18qquhz1u.microcms.io/api/v1/posts/${id}`,
-          {
-            headers: {
-              "X-MICROCMS-API-KEY": process.env
-                .NEXT_PUBLIC_microCMS_API_KEY as string,
-            },
-          }
-        );
-        const data: MicroCmsPost = await res.json(); //詳細ページはリスト形式APIではなく、単一記事取得APIのためdataで。
-        setPost(data);
+        const res = await fetch(`/api/posts/${id}`);
+        const { post } = await res.json();
+        setPost(post);
       } catch (error) {
         setError("記事の取得に失敗しました。");
       } finally {
