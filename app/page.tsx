@@ -1,33 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_BASE_URL } from "../constants";
 import Link from "next/link";
 import { MicroCmsPost } from "@/_types/MicroCmsPost";
+import { PostIndexResponse } from "./api/admin/posts/route";
 
 const NewsIndex = () => {
-  const [posts, setPosts] = useState<MicroCmsPost[]>([]);
+  const [posts, setPosts] = useState<PostIndexResponse["posts"]>([]);
   const [loading, setLoading] = useState<Boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetcher = async () => {
       try {
-        const res = await fetch("https://h18qquhz1u.microcms.io/api/v1/posts", {
-          headers: {
-            "X-MICROCMS-API-KEY": process.env
-              .NEXT_PUBLIC_microCMS_API_KEY as string,
-          },
-        });
-        const { contents } = await res.json(); //microCMSのリスト形式API(contents)を分割代入
-        setPosts(contents);
+        const res = await fetch(`/api/posts`);
+        const { posts } = await res.json();
+        setPosts(posts);
       } catch (error) {
         setError("記事の取得に失敗しました。");
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
+    fetcher();
   }, []);
 
   if (loading) {
