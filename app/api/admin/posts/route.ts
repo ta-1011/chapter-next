@@ -40,7 +40,7 @@ export const GET = async () => {
         createdAt: "desc",
       },
     });
-    return NextResponse.json({ posts }, { status: 200 });
+    return NextResponse.json({ posts }, { status: 200 }); // {posts}は {posts: posts}の分割代入
   } catch (error) {
     if (error instanceof Error)
       return NextResponse.json({ message: error.message }, { status: 400 });
