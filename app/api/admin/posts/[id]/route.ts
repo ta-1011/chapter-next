@@ -57,6 +57,7 @@ export const GET = async (
       return NextResponse.json({ message: error.message }, { status: 400 });
   }
 };
+
 // ----- 記事の更新時 -----
 export type UpdatePostRequestBody = {
   title: string;

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MicroCmsPost } from "@/_types/MicroCmsPost";
 import { PostIndexResponse } from "./api/admin/posts/route";
 
 const NewsIndex = () => {
