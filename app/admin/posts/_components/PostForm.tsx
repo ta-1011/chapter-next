@@ -44,6 +44,7 @@ const PostForm = ({
             タイトル
           </label>
           <input
+            disabled={disabled}
             type="text"
             id={title}
             value={title}

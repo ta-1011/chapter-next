@@ -24,6 +24,7 @@ export const CategoryForm = ({
         <div>
           <label htmlFor="title">カテゴリー名</label>
           <input
+            disabled={disabled}
             type="text"
             value={name}
             onChange={(e) => {
