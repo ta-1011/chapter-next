@@ -1,14 +1,13 @@
 "use client";
 
-import { API_BASE_URL } from "@/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { PostShowResponse } from "@/app/api/posts/[id]/route";
+import { useParams } from "next/navigation";
 
 const Post = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
-
+  const { id } = useParams();
   const [post, setPost] = useState<PostShowResponse["post"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
