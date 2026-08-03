@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import PostForm from "../_components/PostForm";
-import { Category } from "@/app/api/posts/[id]/route";
+import { Category } from "@/app/api/admin/posts/[id]/route";
 import { useRouter } from "next/navigation";
 import {
   CreatePostRequestBody,

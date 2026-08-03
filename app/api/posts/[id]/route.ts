@@ -1,11 +1,5 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextResponse, NextRequest } from "next/server";
-
-export type Category = {
-  id: number;
-  name: string;
-};
-
 export type PostShowResponse = {
   post: {
     id: number;
