@@ -8,6 +8,7 @@ import { CategoryForm } from "../_components/CategoryForm";
 const page = () => {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,15 +26,24 @@ const page = () => {
         },
         body: JSON.stringify(body),
       });
+      if (!res.ok) {
+        throw new Error("カテゴリーの作成に失敗しました");
+      }
       // 作成したカテゴリーのIDを取得
       const data = await res.json();
+      alert("カテゴリーを作成しました。");
       router.push(`/admin/categories/${data.id}`);
     } catch (error) {
-      console.error("カテゴリーの作成に失敗しました");
+      setError("カテゴリーの作成に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
   return (
     <div>
       <div className="mb-8">

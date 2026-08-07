@@ -8,6 +8,8 @@ import { CategoryForm } from "../_components/CategoryForm";
 const page = () => {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { id } = useParams();
   const router = useRouter();
 
@@ -19,16 +21,19 @@ const page = () => {
       const body: UpdateCategoryRequestBody = { name };
 
       // カテゴリーの更新
-      await fetch(`/api/admin/categories/${id}`, {
+      const res = await fetch(`/api/admin/categories/${id}`, {
         method: "PUT",
         headers: {
           "Content-type": "application/json",
         },
         body: JSON.stringify(body),
       });
+      if (!res.ok) {
+        throw new Error("カテゴリーの更新に失敗しました。");
+      }
       alert("カテゴリーを更新しました。");
     } catch (error) {
-      alert("カテゴリーの更新に失敗しました。");
+      setError("カテゴリーの更新に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
@@ -42,13 +47,16 @@ const page = () => {
 
     try {
       setIsSubmitting(true);
-      await fetch(`/api/admin/categories/${id}`, {
+      const res = await fetch(`/api/admin/categories/${id}`, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        throw new Error("カテゴリーの削除に失敗しました。");
+      }
       alert("カテゴリーを削除しました。");
       router.push("/admin/categories");
     } catch (error) {
-      alert("カテゴリーの削除に失敗しました。");
+      setError("カテゴリーの削除に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
@@ -56,13 +64,29 @@ const page = () => {
 
   useEffect(() => {
     const fetcher = async () => {
-      const res = await fetch(`/api/admin/categories/${id}`);
-      const data = await res.json();
-      console.log(data);
-      setName(data.category.name);
+      try {
+        const res = await fetch(`/api/admin/categories/${id}`);
+        if (!res.ok) {
+          throw new Error("カテゴリーの取得に失敗しました。");
+        }
+        const data = await res.json();
+        setName(data.category.name);
+      } catch (error) {
+        setError("カテゴリーの取得に失敗しました。");
+      } finally {
+        setLoading(false);
+      }
     };
     fetcher();
   }, [id]);
+
+  if (loading) {
+    return <p>カテゴリーを読み込み中です。</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <>

@@ -12,6 +12,7 @@ import {
 const page = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState(
     "https://placehold.jp/800x400.png"
   );
@@ -30,7 +31,6 @@ const page = () => {
         thumbnailUrl,
         categories,
       };
-
       const res = await fetch("/api/admin/posts", {
         method: "POST",
         headers: {
@@ -38,19 +38,24 @@ const page = () => {
         },
         body: JSON.stringify(body),
       });
-
+      if (!res.ok) {
+        throw new Error("記事の作成に失敗しました。");
+      }
       // NextResponseから作成した記事のIDを取得
       const data: CreatePostResponse = await res.json();
+      alert("記事を作成しました。");
       // 作成が終えたらその記事idページに遷移します。
       router.push(`/admin/posts/${data.id}`);
-      alert("記事を作成しました。");
     } catch (error) {
-      console.error("記事の作成に失敗しました。");
-      alert("記事の作成に失敗しました。");
+      setError("記事の作成に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <>

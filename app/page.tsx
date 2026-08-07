@@ -13,6 +13,9 @@ const NewsIndex = () => {
     const fetcher = async () => {
       try {
         const res = await fetch(`/api/posts`);
+        if (!res.ok) {
+          throw new Error("記事の取得に失敗しました");
+        }
         const { posts } = await res.json();
         setPosts(posts);
       } catch (error) {

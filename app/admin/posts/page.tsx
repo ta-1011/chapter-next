@@ -6,15 +6,34 @@ import { useEffect, useState } from "react";
 
 const Page = () => {
   const [posts, setPosts] = useState<PostsIndexResponse["posts"]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetcher = async () => {
-      const res = await fetch("/api/admin/posts");
-      const data: PostsIndexResponse = await res.json();
-      setPosts(data.posts);
+      try {
+        const res = await fetch("/api/admin/posts");
+        if (!res.ok) {
+          throw new Error("記事の取得に失敗しました");
+        }
+        const data: PostsIndexResponse = await res.json();
+        setPosts(data.posts);
+      } catch (error) {
+        setError("記事の取得に失敗しました。");
+      } finally {
+        setLoading(false);
+      }
     };
     fetcher();
   }, []);
+
+  if (loading) {
+    return <p>記事を読み込み中です。</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <>

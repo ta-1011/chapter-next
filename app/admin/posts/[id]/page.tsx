@@ -15,6 +15,9 @@ const Page = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null); //記事更新・削除用
+  const [fetchError, setFetchError] = useState<string | null>(null); //記事取得用
   const { id } = useParams();
   const router = useRouter();
 
@@ -24,25 +27,25 @@ const Page = () => {
 
     try {
       setIsSubmitting(true);
-
       const body: UpdatePostRequestBody = {
         title,
         content,
         thumbnailUrl,
         categories,
       };
-
-      await fetch(`/api/admin/posts/${id}`, {
+      const res = await fetch(`/api/admin/posts/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
       });
-
+      if (!res.ok) {
+        throw new Error("記事の更新に失敗しました。");
+      }
       alert("記事を更新しました。");
     } catch (error) {
-      console.log("記事の更新に失敗しました。");
+      setActionError("記事の更新に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
@@ -55,14 +58,16 @@ const Page = () => {
     }
     try {
       setIsSubmitting(true);
-      await fetch(`/api/admin/posts/${id}`, {
+      const res = await fetch(`/api/admin/posts/${id}`, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        throw new Error("記事の削除に失敗しました。");
+      }
       alert("記事を削除しました。");
       router.push("/admin/posts"); // useRouterを使うことで、confirmがtrueになれば該当ページに戻る
     } catch (error) {
-      console.error("記事の削除に失敗しました。");
-      alert("記事の削除に失敗しました。");
+      setActionError("記事の削除に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
@@ -71,15 +76,36 @@ const Page = () => {
   // useEffectの記述
   useEffect(() => {
     const fetcher = async () => {
-      const res = await fetch(`/api/admin/posts/${id}`);
-      const { post }: PostShowResponse = await res.json();
-      setTitle(post.title);
-      setContent(post.content);
-      setThumbnailUrl(post.thumbnailUrl);
-      setCategories(post.postCategories.map((item) => item.category));
+      try {
+        const res = await fetch(`/api/admin/posts/${id}`);
+        if (!res.ok) {
+          throw new Error("記事の取得に失敗しました。");
+        }
+        const { post }: PostShowResponse = await res.json();
+        setTitle(post.title);
+        setContent(post.content);
+        setThumbnailUrl(post.thumbnailUrl);
+        setCategories(post.postCategories.map((item) => item.category));
+      } catch (error) {
+        setFetchError("記事の取得に失敗しました。");
+      } finally {
+        setLoading(false);
+      }
     };
     fetcher(); // ここで関数を呼ぶこと忘れずに
   }, [id]);
+
+  if (loading) {
+    return <p>記事を読み込み中です。</p>;
+  }
+
+  if (actionError) {
+    return <p>{actionError}</p>;
+  }
+
+  if (fetchError) {
+    return <p>{fetchError}</p>;
+  }
 
   return (
     <>

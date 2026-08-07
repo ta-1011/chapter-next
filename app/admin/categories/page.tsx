@@ -8,15 +8,34 @@ const page = () => {
   const [categories, setCategories] = useState<
     CategoriesIndexResponse["categories"]
   >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetcher = async () => {
-      const res = await fetch("/api/admin/categories");
-      const data = await res.json();
-      setCategories(data.categories);
+      try {
+        const res = await fetch("/api/admin/categories");
+        if (!res.ok) {
+          throw new Error("カテゴリーの取得に失敗しました。");
+        }
+        const data = await res.json();
+        setCategories(data.categories);
+      } catch (error) {
+        setError("カテゴリーの取得に失敗しました。");
+      } finally {
+        setLoading(false);
+      }
     };
     fetcher();
   }, []);
+
+  if (loading) {
+    return <p>カテゴリーを読み込み中です。</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <>

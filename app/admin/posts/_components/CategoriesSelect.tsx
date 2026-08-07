@@ -14,6 +14,7 @@ export const CategoriesSelect: React.FC<Props> = ({
   disabled,
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // カテゴリーをクリックしたときに呼び出される
   const clickCategory = (id: number) => {
@@ -44,12 +45,23 @@ export const CategoriesSelect: React.FC<Props> = ({
 
   useEffect(() => {
     const fetcher = async () => {
-      const res = await fetch("/api/admin/categories");
-      const data = await res.json();
-      setCategories(data.categories);
+      try {
+        const res = await fetch("/api/admin/categories");
+        if (!res.ok) {
+          throw new Error("カテゴリーの取得に失敗しました。");
+        }
+        const data = await res.json();
+        setCategories(data.categories);
+      } catch (error) {
+        setError("カテゴリーの取得に失敗しました。");
+      }
     };
     fetcher();
   }, []);
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <div className="w-full">
