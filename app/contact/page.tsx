@@ -79,6 +79,7 @@ const Contact = () => {
             </label>
             <div className="w-full">
               <Input
+                disabled={isSubmit}
                 type="text"
                 value={name}
                 id="name"
@@ -93,6 +94,7 @@ const Contact = () => {
             </label>
             <div className="w-full">
               <Input
+                disabled={isSubmit}
                 type="email"
                 value={email}
                 id="email"
@@ -107,6 +109,7 @@ const Contact = () => {
             </label>
             <div className="w-full">
               <TextArea
+                disabled={isSubmit}
                 value={message}
                 id="message"
                 onChange={(e) => setMessage(e.target.value)}

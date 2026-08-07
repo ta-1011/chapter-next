@@ -74,6 +74,7 @@ const PostForm = ({
             サムネイルURL
           </label>
           <input
+            disabled={disabled}
             type="text"
             id={thumbnailUrl}
             value={thumbnailUrl}
