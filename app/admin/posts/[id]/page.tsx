@@ -4,7 +4,7 @@ import {
   Category,
   UpdatePostRequestBody,
 } from "@/app/api/admin/posts/[id]/route";
-import { PostShowResponse } from "@/app/api/posts/[id]/route";
+import { PostShowResponse } from "@/_types/post";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import PostForm from "../_components/PostForm";

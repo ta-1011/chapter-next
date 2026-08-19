@@ -3,24 +3,6 @@ import { NextResponse } from "next/server";
 
 // ----- 管理者_記事一覧取得API -----
 
-export type PostIndexResponse = {
-  posts: {
-    id: number;
-    title: string;
-    content: string;
-    thumbnailUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    postCategories: {
-      category: {
-        id: number;
-        name: string;
-      };
-    }[];
-  }[];
-};
-
-//
 export const GET = async () => {
   try {
     const posts = await prisma.post.findMany({

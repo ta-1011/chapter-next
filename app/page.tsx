@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PostIndexResponse } from "./api/admin/posts/route";
+import { PostIndexResponse } from "@/_types/post";
 
 const NewsIndex = () => {
   const [posts, setPosts] = useState<PostIndexResponse["posts"]>([]);
-  const [loading, setLoading] = useState<Boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

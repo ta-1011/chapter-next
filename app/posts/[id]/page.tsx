@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
-import { PostShowResponse } from "@/app/api/posts/[id]/route";
+import { useEffect, useState } from "react";
+import { PostShowResponse } from "@/_types/post";
 import { useParams } from "next/navigation";
 
 const Post = ({ params }: { params: Promise<{ id: string }> }) => {
