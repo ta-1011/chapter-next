@@ -1,33 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_BASE_URL } from "../constants";
 import Link from "next/link";
-import { MicroCmsPost } from "@/_types/MicroCmsPost";
+import { PostIndexResponse } from "@/_types/post";
 
 const NewsIndex = () => {
-  const [posts, setPosts] = useState<MicroCmsPost[]>([]);
-  const [loading, setLoading] = useState<Boolean>(true);
+  const [posts, setPosts] = useState<PostIndexResponse["posts"]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetcher = async () => {
       try {
-        const res = await fetch("https://h18qquhz1u.microcms.io/api/v1/posts", {
-          headers: {
-            "X-MICROCMS-API-KEY": process.env
-              .NEXT_PUBLIC_microCMS_API_KEY as string,
-          },
-        });
-        const { contents } = await res.json(); //microCMSのリスト形式API(contents)を分割代入
-        setPosts(contents);
+        const res = await fetch(`/api/posts`);
+        if (!res.ok) {
+          throw new Error("記事の取得に失敗しました");
+        }
+        const { posts } = await res.json();
+        setPosts(posts);
       } catch (error) {
         setError("記事の取得に失敗しました。");
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
+    fetcher();
   }, []);
 
   if (loading) {
@@ -57,14 +54,18 @@ const NewsIndex = () => {
           {posts.map((post) => {
             return (
               <li className="p-6 mb-8 border" key={post.id}>
-                <Link href={`/post/${post.id}`}>
+                <Link href={`/posts/${post.id}`}>
                   <div className="flex justify-between">
                     <time>
                       {new Date(post.createdAt).toLocaleDateString("ja-JP")}
                     </time>
                     <div className="flex gap-2">
-                      {post.categories.map((category) => {
-                        return <span key={category.id}>{category.name}</span>;
+                      {post.postCategories.map((postCategory) => {
+                        return (
+                          <div key={postCategory.category.id}>
+                            {postCategory.category.name}
+                          </div>
+                        );
                       })}
                     </div>
                   </div>

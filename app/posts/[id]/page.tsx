@@ -1,32 +1,24 @@
 "use client";
 
-import { API_BASE_URL } from "@/constants";
-import { MicroCmsPost } from "@/_types/MicroCmsPost";
 import Image from "next/image";
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { PostShowResponse } from "@/_types/post";
+import { useParams } from "next/navigation";
 
 const Post = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
-
-  const [post, setPost] = useState<MicroCmsPost | null>(null);
+  const { id } = useParams();
+  const [post, setPost] = useState<PostShowResponse["post"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 非同期処理なので、初回レンダリング時点ではまだ記事データが存在しないため、(null)のどちらも許可する必要
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch(
-          `https://h18qquhz1u.microcms.io/api/v1/posts/${id}`,
-          {
-            headers: {
-              "X-MICROCMS-API-KEY": process.env
-                .NEXT_PUBLIC_microCMS_API_KEY as string,
-            },
-          }
-        );
-        const data: MicroCmsPost = await res.json(); //詳細ページはリスト形式APIではなく、単一記事取得APIのためdataで。
-        setPost(data);
+        const res = await fetch(`/api/posts/${id}`);
+        const { post } = await res.json();
+        setPost(post);
       } catch (error) {
         setError("記事の取得に失敗しました。");
       } finally {
@@ -58,13 +50,22 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
     <>
       <div className="max-w-200 mx-auto py-10">
         <div className="mt-8">
-          <Image src={post.thumbnail.url} alt="" width={600} height={200} />
+          <Image
+            src={post.thumbnailUrl.trim()}
+            alt=""
+            width={600}
+            height={200}
+          />
         </div>
         <div className="flex justify-between pt-4">
           <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
           <div className="flex gap-2">
-            {post.categories.map((category) => {
-              return <span key={category.id}>{category.name}</span>;
+            {post.postCategories.map((postCategory) => {
+              return (
+                <span key={postCategory.category.id}>
+                  {postCategory.category.name}
+                </span>
+              );
             })}
           </div>
         </div>
