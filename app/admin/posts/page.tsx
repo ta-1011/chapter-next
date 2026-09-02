@@ -1,5 +1,6 @@
 "use client";
 
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { PostsIndexResponse } from "@/app/api/posts/route";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -8,11 +9,20 @@ const Page = () => {
   const [posts, setPosts] = useState<PostsIndexResponse["posts"]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // APIリクエストのヘッダーにtokenを追加することで、サーバーにtokenを送信できるようにする
+  const { token } = useSupabaseSession();
 
   useEffect(() => {
+    if (!token) return;
+
     const fetcher = async () => {
       try {
-        const res = await fetch("/api/admin/posts");
+        const res = await fetch("/api/admin/posts", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // Headerにtokenを付与
+          },
+        });
         if (!res.ok) {
           throw new Error("記事の取得に失敗しました");
         }
@@ -25,7 +35,7 @@ const Page = () => {
       }
     };
     fetcher();
-  }, []);
+  }, [token]);
 
   if (loading) {
     return <p>記事を読み込み中です。</p>;

@@ -1,6 +1,6 @@
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { Category } from "@/app/api/admin/posts/[id]/route";
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
 interface Props {
   selectedCategories: Category[];
@@ -15,6 +15,7 @@ export const CategoriesSelect: React.FC<Props> = ({
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useSupabaseSession();
 
   // カテゴリーをクリックしたときに呼び出される
   const clickCategory = (id: number) => {
@@ -44,9 +45,16 @@ export const CategoriesSelect: React.FC<Props> = ({
   };
 
   useEffect(() => {
+    if (!token) return;
+
     const fetcher = async () => {
       try {
-        const res = await fetch("/api/admin/categories");
+        const res = await fetch("/api/admin/categories", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        });
         if (!res.ok) {
           throw new Error("カテゴリーの取得に失敗しました。");
         }
@@ -57,7 +65,7 @@ export const CategoriesSelect: React.FC<Props> = ({
       }
     };
     fetcher();
-  }, []);
+  }, [token]);
 
   if (error) {
     return <p>{error}</p>;

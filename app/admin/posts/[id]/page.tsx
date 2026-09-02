@@ -7,6 +7,7 @@ import {
 import { PostShowResponse } from "@/_types/post";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import PostForm from "../_components/PostForm";
 
 const Page = () => {
@@ -21,9 +22,12 @@ const Page = () => {
   const { id } = useParams();
   const router = useRouter();
 
+  const { token } = useSupabaseSession();
+
   //記事更新
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault(); // フォームのデフォルトの動作をキャンセル。
+    if (!token) return;
 
     try {
       setIsSubmitting(true);
@@ -37,6 +41,7 @@ const Page = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify(body),
       });
@@ -53,13 +58,17 @@ const Page = () => {
 
   //記事削除
   const handleDelete = async () => {
-    if (!confirm("記事を削除しますか？")) {
-      return;
-    }
+    if (!token) return;
+    if (!confirm("記事を削除しますか？")) return;
+
     try {
       setIsSubmitting(true);
       const res = await fetch(`/api/admin/posts/${id}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
       });
       if (!res.ok) {
         throw new Error("記事の削除に失敗しました。");
@@ -75,9 +84,16 @@ const Page = () => {
 
   // useEffectの記述
   useEffect(() => {
+    if (!token) return;
+
     const fetcher = async () => {
       try {
-        const res = await fetch(`/api/admin/posts/${id}`);
+        const res = await fetch(`/api/admin/posts/${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        });
         if (!res.ok) {
           throw new Error("記事の取得に失敗しました。");
         }
@@ -93,7 +109,7 @@ const Page = () => {
       }
     };
     fetcher(); // ここで関数を呼ぶこと忘れずに
-  }, [id]);
+  }, [id, token]);
 
   if (loading) {
     return <p>記事を読み込み中です。</p>;

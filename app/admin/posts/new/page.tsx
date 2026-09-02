@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import PostForm from "../_components/PostForm";
 import { Category } from "@/app/api/admin/posts/[id]/route";
 import { useRouter } from "next/navigation";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import {
   CreatePostRequestBody,
   CreatePostResponse,
@@ -19,9 +20,11 @@ const page = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!token) return;
 
     try {
       setIsSubmitting(true);
@@ -35,6 +38,7 @@ const page = () => {
         method: "POST",
         headers: {
           "Content-type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify(body),
       });
@@ -58,7 +62,7 @@ const page = () => {
   }
 
   return (
-    <>
+    <div className="container mx-auto px-4">
       <div className="mb-8">
         <h1 className="text-xl font-bold">記事作成</h1>
       </div>
@@ -75,7 +79,7 @@ const page = () => {
         onSubmit={handleSubmit}
         disabled={isSubmitting}
       />
-    </>
+    </div>
   );
 };
 
