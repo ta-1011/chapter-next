@@ -14,7 +14,7 @@ export type Props = {
   setThumbnailUrl: (thumbnailUrl: string) => void;
   categories: Category[];
   setCategories: (categories: Category[]) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
   onDelete?: () => void; //新規ページでは削除は不要のため?は必要
   disabled: boolean;
 };
