@@ -1,9 +1,21 @@
 import { prisma } from "@/app/_libs/prisma";
+import { supabase } from "@/app/_libs/supabase";
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 // ----- 管理者_記事一覧取得API -----
 
-export const GET = async () => {
+export const GET = async (request: NextRequest) => {
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) {
+    return NextResponse.json({ status: error.message }, { status: 400 });
+  }
+
+  // tokenがエラーでなく正しい場合は、以降が実行される
   try {
     const posts = await prisma.post.findMany({
       include: {

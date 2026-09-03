@@ -1,6 +1,7 @@
 import { prisma } from "@/app/_libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { PostShowResponse } from "@/_types/post";
+import { supabase } from "@/app/_libs/supabase";
 
 export type Category = {
   id: number;
@@ -10,10 +11,20 @@ export type Category = {
 // ----- 記事詳細情報取得 -----
 
 export const GET = async (
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
+  const token = request.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  if (error) {
+    return NextResponse.json({ status: error.message }, { status: 400 });
+  }
+
   const { id } = await params;
+
   try {
     const post = await prisma.post.findUnique({
       where: {
@@ -36,7 +47,7 @@ export const GET = async (
     if (!post) {
       return NextResponse.json(
         { message: "記事が見つかりません。" },
-        { status: 400 }
+        { status: 404 }
       );
     }
     return NextResponse.json<PostShowResponse>({ post }, { status: 200 });
