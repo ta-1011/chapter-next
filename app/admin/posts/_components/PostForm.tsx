@@ -10,8 +10,8 @@ export type Props = {
   setTitle: (title: string) => void;
   content: string;
   setContent: (content: string) => void;
-  thumbnailUrl: string;
-  setThumbnailUrl: (thumbnailUrl: string) => void;
+  thumbnailImageKey: string;
+  setThumbnailImageKey: (thumbnailImageKey: string) => void;
   categories: Category[];
   setCategories: (categories: Category[]) => void;
   onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
@@ -23,11 +23,11 @@ const PostForm = ({
   mode,
   title,
   content,
-  thumbnailUrl,
+  thumbnailImageKey,
   categories,
   setTitle,
   setContent,
-  setThumbnailUrl,
+  setThumbnailImageKey,
   setCategories,
   onSubmit,
   onDelete,
@@ -68,7 +68,7 @@ const PostForm = ({
         </div>
         <div>
           <label
-            htmlFor="thumbnailUrl"
+            htmlFor="thumbnailImageKey"
             className="block text-sm font-medium text-gray-700"
           >
             サムネイルURL

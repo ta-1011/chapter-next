@@ -51,10 +51,11 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="max-w-200 mx-auto py-10">
         <div className="mt-8">
           <Image
-            src={post.thumbnailUrl.trim()}
-            alt=""
+            src={post.thumbnailImageKey.trim()}
+            alt={post.title}
             width={600}
             height={200}
+            style={{ width: "100%", height: "auto" }}
           />
         </div>
         <div className="flex justify-between pt-4">

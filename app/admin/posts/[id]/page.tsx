@@ -13,7 +13,7 @@ import PostForm from "../_components/PostForm";
 const Page = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ const Page = () => {
       const body: UpdatePostRequestBody = {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
         categories,
       };
       const res = await fetch(`/api/admin/posts/${id}`, {
@@ -100,7 +100,7 @@ const Page = () => {
         const { post }: PostShowResponse = await res.json();
         setTitle(post.title);
         setContent(post.content);
-        setThumbnailUrl(post.thumbnailUrl);
+        setThumbnailImageKey(post.thumbnailImageKey);
         setCategories(post.postCategories.map((item) => item.category));
       } catch (error) {
         setFetchError("記事の取得に失敗しました。");
@@ -134,8 +134,8 @@ const Page = () => {
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
+        thumbnailImageKey={thumbnailImageKey}
+        setThumbnailImageKey={setThumbnailImageKey}
         categories={categories}
         setCategories={setCategories}
         onSubmit={handleSubmit}

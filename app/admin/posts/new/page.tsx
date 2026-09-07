@@ -14,7 +14,7 @@ const page = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [thumbnailUrl, setThumbnailUrl] = useState(
+  const [thumbnailImageKey, setThumbnailImageKey] = useState(
     "https://placehold.jp/800x400.png"
   );
   const [categories, setCategories] = useState<Category[]>([]);
@@ -31,7 +31,7 @@ const page = () => {
       const body: CreatePostRequestBody = {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
         categories,
       };
       const res = await fetch("/api/admin/posts", {
@@ -72,8 +72,8 @@ const page = () => {
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
+        thumbnailImageKey={thumbnailImageKey}
+        setThumbnailImageKey={setThumbnailImageKey}
         categories={categories}
         setCategories={setCategories}
         onSubmit={handleSubmit}
