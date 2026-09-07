@@ -1,5 +1,4 @@
 // 管理者ページの共通レイアウトコンポーネント
-
 "use client";
 
 import { ReactNode } from "react";
@@ -20,9 +19,9 @@ const AdminLayout = ({ children }: Props) => {
   };
 
   return (
-    <>
+    <div className="flex flex-col md:block">
       {/* サイドバー */}
-      <aside className="fixed bg-gray-100 w-70 left-0 bottom-0 top-16">
+      <aside className="bg-gray-100 w-full md:fixed md:w-70 md:left-0 md:bottom-0 md:top-23">
         <Link
           href="/admin/posts"
           className={`p-4 block hover:bg-blue-100 ${
@@ -34,7 +33,7 @@ const AdminLayout = ({ children }: Props) => {
         <Link
           href="/admin/categories"
           className={`p-4 block hover:bg-blue-100 ${
-            isSelected("/admin/posts") && "bg-blue-100"
+            isSelected("/admin/categories") && "bg-blue-100"
           }`}
         >
           カテゴリー一覧
@@ -42,8 +41,8 @@ const AdminLayout = ({ children }: Props) => {
       </aside>
 
       {/* メインコンテンツ */}
-      <div className="ml-70 p-4">{children}</div>
-    </>
+      <div className="p-4 md:ml-70">{children}</div>
+    </div>
   );
 };
 

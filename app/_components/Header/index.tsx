@@ -18,7 +18,7 @@ export const Header: React.FC = () => {
   const { session, isLoading } = useSupabaseSession();
 
   return (
-    <header className="bg-gray-800 text-white p-6 font-bold flex justify-between items-center">
+    <header className="bg-gray-800 text-white p-6 font-bold flex justify-between items-center z-999">
       <Link href="/" className={styles.header_link}>
         BLOG
       </Link>
