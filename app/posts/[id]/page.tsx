@@ -5,16 +5,37 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PostShowResponse } from "@/_types/post";
 import { useParams } from "next/navigation";
+import { supabase } from "@/app/_libs/supabase";
 
 const Post = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = useParams();
   const [post, setPost] = useState<PostShowResponse["post"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Imageタグのsrcにセットする画像URLを持たせるstate
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
+    null
+  );
 
-  // 非同期処理なので、初回レンダリング時点ではまだ記事データが存在しないため、(null)のどちらも許可する必要
   useEffect(() => {
-    const fetchPosts = async () => {
+    if (!post?.thumbnailImageKey) return;
+
+    // アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
+    const fetcher = async () => {
+      const {
+        data: { publicUrl },
+      } = await supabase.storage
+        .from("post_thumbnail")
+        .getPublicUrl(post.thumbnailImageKey);
+
+      setThumbnailImageUrl(publicUrl);
+    };
+    fetcher();
+  }, [post?.thumbnailImageKey]);
+
+  // APIでpostsを取得する処理をuseEffectで実行
+  useEffect(() => {
+    const fetcher = async () => {
       try {
         const res = await fetch(`/api/posts/${id}`);
         const { post } = await res.json();
@@ -25,7 +46,7 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
         setLoading(false);
       }
     };
-    fetchPosts();
+    fetcher();
   }, [id]);
 
   if (loading) {
@@ -49,15 +70,19 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
     <>
       <div className="max-w-200 mx-auto py-10">
-        <div className="mt-8">
-          <Image
-            src={post.thumbnailImageKey.trim()}
-            alt={post.title}
-            width={600}
-            height={200}
-            style={{ width: "100%", height: "auto" }}
-          />
-        </div>
+        {thumbnailImageUrl && (
+          <div className="mt-8">
+            <Image
+              src={thumbnailImageUrl}
+              alt={post.title}
+              width={600}
+              height={200}
+              sizes="100vw"
+              style={{ width: "100%", height: "auto" }}
+            />
+          </div>
+        )}
+
         <div className="flex justify-between pt-4">
           <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
           <div className="flex gap-2">
