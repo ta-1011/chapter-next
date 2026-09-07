@@ -1,8 +1,11 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
-import { useSupabaseSession } from "../_hooks/useSupabaseSession";
+import styles from "./style.module.css";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useRouter } from "next/navigation";
-import { supabase } from "../_libs/supabase";
+import { supabase } from "@/app/_libs/supabase";
 
 export const Header: React.FC = () => {
   const router = useRouter();
@@ -16,7 +19,7 @@ export const Header: React.FC = () => {
 
   return (
     <header className="bg-gray-800 text-white p-6 font-bold flex justify-between items-center">
-      <Link href="/" className="header-link">
+      <Link href="/" className={styles.header_link}>
         BLOG
       </Link>
       {/* ログイン状態のローディング中でなければ、以下を表示。 */}
@@ -24,15 +27,17 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-4">
           {session ? (
             <>
-              <Link href="/admin">管理画面</Link>
+              <Link href="/admin/posts" className={styles.header_link}>
+                管理画面
+              </Link>
               <button onClick={handleLogout}>ログアウト</button>
             </>
           ) : (
             <>
-              <Link href="/contact" className="header-link">
+              <Link href="/contact" className={styles.header_link}>
                 お問い合わせ
               </Link>
-              <Link href="/sign_in" className="header-link">
+              <Link href="/sign_in" className={styles.header_link}>
                 ログイン
               </Link>
             </>

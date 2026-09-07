@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/constants";
-import Input from "@/_components/ui/Input";
-import ErrorMessage from "@/_components/ui/ErrorMessage";
-import TextArea from "@/_components/ui/TextArea";
+import Input from "@/app/_components/ui/Input";
+import ErrorMessage from "@/app/_components/ui/ErrorMessage";
+import TextArea from "@/app/_components/ui/TextArea";
 
 const Contact = () => {
   const [name, setName] = useState("");
