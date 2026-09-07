@@ -21,7 +21,8 @@ const Page = () => {
     });
 
     if (error) {
-      alert("登録に失敗しました。");
+      console.error(error);
+      alert(`登録に失敗しました：${error.message}`);
     } else {
       setEmail("");
       setPassword("");
@@ -72,7 +73,6 @@ const Page = () => {
           />
         </div>
         <div>
-          {" "}
           <button
             type="submit"
             className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
