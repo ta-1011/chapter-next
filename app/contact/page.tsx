@@ -1,60 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { API_BASE_URL } from "@/constants";
 import Input from "@/app/_components/ui/Input";
 import ErrorMessage from "@/app/_components/ui/ErrorMessage";
 import TextArea from "@/app/_components/ui/TextArea";
+import { useForm } from "react-hook-form";
+import { ContactForm } from "@/_types/contactForm";
 
 const Contact = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-
-  const [nameErrorMessage, setNameErrorMessage] = useState("");
-  const [emailErrorMessage, setEmailErrorMessage] = useState("");
-  const [messageErrorMessage, setMessageErrorMessage] = useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ContactForm>();
 
   const [isSubmit, setIsSubmit] = useState(false);
 
-  const valid = () => {
-    let isValid = true;
-    let nameError = "";
-    let emailError = "";
-    let messageError = "";
-
-    if (!name) {
-      nameError = "お名前を入力してください";
-      isValid = false;
-    }
-    if (!email) {
-      emailError = "メールアドレスを入力してください";
-      isValid = false;
-    }
-    if (!message) {
-      messageError = "本文は必須です";
-      isValid = false;
-    }
-
-    setNameErrorMessage(nameError);
-    setEmailErrorMessage(emailError);
-    setMessageErrorMessage(messageError);
-
-    //最後はどちらの真偽地になっても、isValidのリターン式が必要
-    return isValid;
-  };
-
   //送信の処理
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
-    if (!valid()) return;
+  const onSubmit = async (data: ContactForm) => {
     setIsSubmit(true);
 
     try {
-      await fetch(`${API_BASE_URL}/contacts`);
+      const res = await fetch(`${API_BASE_URL}/contacts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        throw new Error("送信に失敗しました");
+      }
       alert("送信しました。");
-      handleClear();
+      reset();
     } catch (error) {
       alert("送信に失敗しました");
     } finally {
@@ -62,17 +42,11 @@ const Contact = () => {
     }
   };
 
-  const handleClear = () => {
-    setName("");
-    setEmail("");
-    setMessage("");
-  };
-
   return (
     <>
       <div className="max-w-200 mx-auto py-10">
-        <h1 className="text-left text-4xl">記事一覧</h1>
-        <form onSubmit={handleSubmit} noValidate>
+        <h1 className="text-left text-4xl">お問い合わせ</h1>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="mt-8 w-full flex justify-between">
             <label htmlFor="" className="w-60">
               お名前
@@ -81,11 +55,12 @@ const Contact = () => {
               <Input
                 disabled={isSubmit}
                 type="text"
-                value={name}
                 id="name"
-                onChange={(e) => setName(e.target.value)}
+                {...register("name", {
+                  required: "お名前を入力してください。",
+                })}
               />
-              <ErrorMessage message={nameErrorMessage} />
+              <ErrorMessage message={errors.name?.message} />
             </div>
           </div>
           <div className="mt-8 w-full flex justify-between">
@@ -96,11 +71,16 @@ const Contact = () => {
               <Input
                 disabled={isSubmit}
                 type="email"
-                value={email}
                 id="email"
-                onChange={(e) => setEmail(e.target.value)}
+                {...register("email", {
+                  required: "メールアドレスを入力してください。",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "メールアドレスの形式が正しくありません",
+                  },
+                })}
               />
-              <ErrorMessage message={emailErrorMessage} />
+              <ErrorMessage message={errors.email?.message} />
             </div>
           </div>
           <div className="mt-8 w-full flex justify-between">
@@ -110,18 +90,19 @@ const Contact = () => {
             <div className="w-full">
               <TextArea
                 disabled={isSubmit}
-                value={message}
                 id="message"
-                onChange={(e) => setMessage(e.target.value)}
+                {...register("message", {
+                  required: "お問い合わせ内容を入力してください。",
+                })}
               />
-              <ErrorMessage message={messageErrorMessage} />
+              <ErrorMessage message={errors.message?.message} />
             </div>
           </div>
           <div className="flex justify-center mt-8">
             <button type="submit" className="mr-4" disabled={isSubmit}>
               送信
             </button>
-            <button type="button" onClick={handleClear} disabled={isSubmit}>
+            <button type="button" onClick={() => reset()} disabled={isSubmit}>
               クリア
             </button>
           </div>

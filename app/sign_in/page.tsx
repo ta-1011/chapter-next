@@ -3,25 +3,34 @@
 import { supabase } from "../_libs/supabase";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { InputForm } from "@/_types/inputForm";
+import ErrorMessage from "../_components/ui/ErrorMessage";
 
 const Page = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<InputForm>();
+
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (data: InputForm) => {
     setIsLoading(true);
 
     // パスワードが間違っていたりすると、errorが返ってくるので、alertで通知
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: data.email,
+      password: data.password,
     });
 
     if (error) {
       alert("ログインに失敗しました。");
+      // ログイン失敗時はresetを使ってパスワード欄は空に
+      reset({ email: data.email, password: "" });
     } else {
       router.replace("/admin/posts");
     }
@@ -30,25 +39,32 @@ const Page = () => {
 
   return (
     <div className="flex justify-center pt-60">
-      <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-100">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 w-full max-w-100"
+      >
         <div>
           <label
             htmlFor="email"
             className="block mb-2 text-sm font-medium text-gray-900"
           >
-            メーーールアドレス
+            メールアドレス
           </label>
           <input
             type="email"
-            name="email"
             id="email"
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             placeholder="name@company.com"
-            required
-            onChange={(e) => setEmail(e.target.value)}
-            value={email}
+            {...register("email", {
+              required: "メールアドレスを入力してください。",
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: "メールアドレスの形式が正しくありません",
+              },
+            })}
             disabled={isLoading}
           />
+          <ErrorMessage message={errors.email?.message} />
         </div>
         <div>
           <label
@@ -59,15 +75,15 @@ const Page = () => {
           </label>
           <input
             type="password"
-            name="password"
             id="password"
             placeholder="••••••••"
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            required
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
             disabled={isLoading}
+            {...register("password", {
+              required: "パスワードを入力してください。",
+            })}
           />
+          <ErrorMessage message={errors.password?.message} />
         </div>
         <div>
           <button
