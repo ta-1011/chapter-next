@@ -3,46 +3,39 @@
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { PostsIndexResponse } from "@/app/api/posts/route";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 
 const Page = () => {
-  const [posts, setPosts] = useState<PostsIndexResponse["posts"]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // APIリクエストのヘッダーにtokenを追加することで、サーバーにtokenを送信できるようにする
   const { token } = useSupabaseSession();
 
-  useEffect(() => {
-    if (!token) return;
+  const fetcher = async ([url, token]: [
+    string,
+    string
+  ]): Promise<PostsIndexResponse> => {
+    const res = await fetch(url, {
+      headers: {
+        "Content-type": "application/json",
+        Authorization: token,
+      },
+    });
+    if (!res.ok) {
+      throw new Error("記事の取得に失敗しました。");
+    }
+    return res.json();
+  };
 
-    const fetcher = async () => {
-      try {
-        const res = await fetch("/api/admin/posts", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token, // Headerにtokenを付与
-          },
-        });
-        if (!res.ok) {
-          throw new Error("記事の取得に失敗しました");
-        }
-        const data: PostsIndexResponse = await res.json();
-        setPosts(data.posts);
-      } catch (error) {
-        setError("記事の取得に失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, [token]);
+  const { data, error, isLoading } = useSWR<
+    PostsIndexResponse,
+    Error,
+    [string, string] | null
+  >(token ? ["/api/admin/posts", token] : null, fetcher);
 
-  if (loading) {
+  if (isLoading) {
     return <p>記事を読み込み中です。</p>;
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <p>{error.message}</p>;
   }
 
   return (
@@ -55,7 +48,7 @@ const Page = () => {
       </div>
 
       <div className="">
-        {posts.map((post) => {
+        {data?.posts.map((post) => {
           return (
             <Link href={`/admin/posts/${post.id}`} key={post.id}>
               <div className="border-b border-gray-300 p-4 hover:bg-gray-100 cursor-pointer">

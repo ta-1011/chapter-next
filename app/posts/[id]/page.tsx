@@ -6,19 +6,33 @@ import { useEffect, useState } from "react";
 import { PostShowResponse } from "@/_types/post";
 import { useParams } from "next/navigation";
 import { supabase } from "@/app/_libs/supabase";
+import useSWR from "swr";
 
-const Post = ({ params }: { params: Promise<{ id: string }> }) => {
+const Post = () => {
   const { id } = useParams();
-  const [post, setPost] = useState<PostShowResponse["post"] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   // Imageタグのsrcにセットする画像URLを持たせるstate
   const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
     null
   );
 
+  const fetcher = async (url: string): Promise<PostShowResponse> => {
+    const res = await fetch(url, {
+      headers: {
+        "Content-type": "application/json",
+      },
+    });
+    if (!res.ok) {
+      throw new Error("記事の取得に失敗しました。");
+    }
+    return res.json();
+  };
+  const { data, error, isLoading } = useSWR<PostShowResponse, Error, string>(
+    `/api/posts/${id}`,
+    fetcher
+  );
+
   useEffect(() => {
-    if (!post?.thumbnailImageKey) return;
+    if (!data?.post.thumbnailImageKey) return;
 
     // アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
     const fetcher = async () => {
@@ -26,37 +40,21 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
         data: { publicUrl },
       } = await supabase.storage
         .from("post_thumbnail")
-        .getPublicUrl(post.thumbnailImageKey);
+        .getPublicUrl(data.post.thumbnailImageKey);
 
       setThumbnailImageUrl(publicUrl);
     };
     fetcher();
-  }, [post?.thumbnailImageKey]);
+  }, [data?.post.thumbnailImageKey]);
 
-  // APIでpostsを取得する処理をuseEffectで実行
-  useEffect(() => {
-    const fetcher = async () => {
-      try {
-        const res = await fetch(`/api/posts/${id}`);
-        const { post } = await res.json();
-        setPost(post);
-      } catch (error) {
-        setError("記事の取得に失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, [id]);
-
-  if (loading) {
+  if (isLoading) {
     return <p>記事を読み込み中です。</p>;
   }
   if (error) {
-    return <p>{error}</p>;
+    return <p>{error.message}</p>;
   }
 
-  if (!post) {
+  if (!data?.post) {
     return (
       <>
         <p>該当する記事が見つかりませんでした。</p>
@@ -74,7 +72,7 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="mt-8">
             <Image
               src={thumbnailImageUrl}
-              alt={post.title}
+              alt={data.post.title}
               width={600}
               height={200}
               sizes="100vw"
@@ -84,9 +82,11 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
         )}
 
         <div className="flex justify-between pt-4">
-          <time>{new Date(post.createdAt).toLocaleDateString("ja-JP")}</time>
+          <time>
+            {new Date(data.post.createdAt).toLocaleDateString("ja-JP")}
+          </time>
           <div className="flex gap-2">
-            {post.postCategories.map((postCategory) => {
+            {data.post.postCategories.map((postCategory) => {
               return (
                 <span key={postCategory.category.id}>
                   {postCategory.category.name}
@@ -95,10 +95,10 @@ const Post = ({ params }: { params: Promise<{ id: string }> }) => {
             })}
           </div>
         </div>
-        <h1 className="text-4xl">{post.title}</h1>
+        <h1 className="text-4xl">{data.post.title}</h1>
         <p
           className="pt-4 text-left"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: data.post.content }}
         />
       </div>
     </>

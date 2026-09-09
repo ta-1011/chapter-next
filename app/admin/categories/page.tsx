@@ -2,48 +2,41 @@
 
 import { CategoriesIndexResponse } from "@/app/api/admin/categories/route";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import useSWR from "swr";
 
 const page = () => {
-  const [categories, setCategories] = useState<
-    CategoriesIndexResponse["categories"]
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { token } = useSupabaseSession();
 
-  useEffect(() => {
-    if (!token) return;
+  const fetcher = async ([url, token]: [
+    string,
+    string
+  ]): Promise<CategoriesIndexResponse> => {
+    const res = await fetch(url, {
+      headers: {
+        "Content-type": "application/json",
+        Authorization: token,
+      },
+    });
 
-    const fetcher = async () => {
-      try {
-        const res = await fetch("/api/admin/categories", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-        });
-        if (!res.ok) {
-          throw new Error("カテゴリーの取得に失敗しました。");
-        }
-        const data = await res.json();
-        setCategories(data.categories);
-      } catch (error) {
-        setError("カテゴリーの取得に失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, [token]);
+    if (!res.ok) {
+      throw new Error("カテゴリーの取得に失敗しました。");
+    }
+    return res.json();
+  };
 
-  if (loading) {
+  const { data, error, isLoading } = useSWR<
+    CategoriesIndexResponse, //① Data型
+    Error, //② Error型
+    [string, string] | null //③ Key型
+  >(token ? ["/api/admin/categories", token] : null, fetcher);
+
+  if (isLoading) {
     return <p>カテゴリーを読み込み中です。</p>;
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <p>{error.message}</p>;
   }
 
   return (
@@ -57,7 +50,8 @@ const page = () => {
         </div>
 
         <div>
-          {categories.map((category) => {
+          {/* dataがない場合もあるため */}
+          {data?.categories.map((category) => {
             return (
               <Link href={`/admin/categories/${category.id}`} key={category.id}>
                 <div className="border-b border-gray-300 p-4 hover:bg-gray-100 cursor-pointer">

@@ -96,7 +96,7 @@ const PostForm = ({
           <input
             disabled={disabled}
             type="text"
-            id={title}
+            id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-200 p-3"

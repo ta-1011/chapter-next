@@ -9,6 +9,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import PostForm from "../_components/PostForm";
+import useSWR from "swr";
 
 const Page = () => {
   const [title, setTitle] = useState("");
@@ -16,15 +17,43 @@ const Page = () => {
   const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [actionError, setActionError] = useState<string | null>(null); //記事更新・削除用
-  const [fetchError, setFetchError] = useState<string | null>(null); //記事取得用
   const { id } = useParams();
   const router = useRouter();
 
   const { token } = useSupabaseSession();
 
-  //記事更新
+  const fetcher = async ([url, token]: [
+    string,
+    string
+  ]): Promise<PostShowResponse> => {
+    const res = await fetch(url, {
+      headers: {
+        "Content-type": "application/json",
+        Authorization: token,
+      },
+    });
+    if (!res.ok) {
+      throw new Error("記事の取得に失敗しました。");
+    }
+    return res.json();
+  };
+
+  const { data, error, isLoading, mutate } = useSWR<
+    PostShowResponse,
+    Error,
+    [string, string] | null
+  >(token ? [`/api/admin/posts/${id}`, token] : null, fetcher);
+
+  useEffect(() => {
+    if (data) {
+      setTitle(data.post.title);
+      setContent(data.post.content);
+      setThumbnailImageKey(data.post.thumbnailImageKey);
+      setCategories(data.post.postCategories.map((c) => c.category));
+    }
+  }, [data]);
+
+  // ----- 記事の更新 -----
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault(); // フォームのデフォルトの動作をキャンセル。
     if (!token) return;
@@ -48,18 +77,20 @@ const Page = () => {
       if (!res.ok) {
         throw new Error("記事の更新に失敗しました。");
       }
+      mutate();
       alert("記事を更新しました。");
     } catch (error) {
-      setActionError("記事の更新に失敗しました。");
+      alert("記事の更新に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  //記事削除
+  // ----- 記事削除 -----
   const handleDelete = async () => {
+    const result = confirm("記事を削除しますか？");
+    if (!result) return;
     if (!token) return;
-    if (!confirm("記事を削除しますか？")) return;
 
     try {
       setIsSubmitting(true);
@@ -73,54 +104,22 @@ const Page = () => {
       if (!res.ok) {
         throw new Error("記事の削除に失敗しました。");
       }
+      mutate();
       alert("記事を削除しました。");
-      router.push("/admin/posts"); // useRouterを使うことで、confirmがtrueになれば該当ページに戻る
+      router.push("/admin/posts");
     } catch (error) {
-      setActionError("記事の削除に失敗しました。");
+      alert("記事の削除に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // useEffectの記述
-  useEffect(() => {
-    if (!token) return;
-
-    const fetcher = async () => {
-      try {
-        const res = await fetch(`/api/admin/posts/${id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-        });
-        if (!res.ok) {
-          throw new Error("記事の取得に失敗しました。");
-        }
-        const { post }: PostShowResponse = await res.json();
-        setTitle(post.title);
-        setContent(post.content);
-        setThumbnailImageKey(post.thumbnailImageKey);
-        setCategories(post.postCategories.map((item) => item.category));
-      } catch (error) {
-        setFetchError("記事の取得に失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher(); // ここで関数を呼ぶこと忘れずに
-  }, [id, token]);
-
-  if (loading) {
+  if (isLoading) {
     return <p>記事を読み込み中です。</p>;
   }
 
-  if (actionError) {
-    return <p>{actionError}</p>;
-  }
-
-  if (fetchError) {
-    return <p>{fetchError}</p>;
+  if (error) {
+    return <p>{error.message}</p>;
   }
 
   return (

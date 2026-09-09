@@ -1,22 +1,55 @@
 "use client";
 
-import { UpdateCategoryRequestBody } from "@/app/api/admin/categories/[id]/route";
+import {
+  CategoryShowResponse,
+  UpdateCategoryRequestBody,
+} from "@/app/api/admin/categories/[id]/route";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CategoryForm } from "../_components/CategoryForm";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import useSWR from "swr";
 
 const page = () => {
-  const [name, setName] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { id } = useParams();
   const router = useRouter();
-
   const { token } = useSupabaseSession();
+  const [name, setName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const fetcher = async ([url, token]: [
+    string,
+    string
+  ]): Promise<CategoryShowResponse> => {
+    const res = await fetch(url, {
+      headers: {
+        "Content-type": "application/json",
+        Authorization: token,
+      },
+    });
+    if (!res.ok) {
+      throw new Error("カテゴリーの取得に失敗しました。");
+    }
+    return res.json();
+  };
+
+  // 今回のページは更新・削除があるのでmutateが必要
+  const { data, error, isLoading, mutate } = useSWR<
+    CategoryShowResponse,
+    Error,
+    [string, string] | null
+  >(token ? [`/api/admin/categories/${id}`, token] : null, fetcher);
+
+  useEffect(() => {
+    if (data) {
+      setName(data.category.name);
+    }
+  }, [data]);
+
+  // ----- カテゴリーの更新 -----
+  const handleSubmit = async (
+    e: React.SubmitEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     if (!token) return;
 
@@ -24,7 +57,6 @@ const page = () => {
       setIsSubmitting(true);
       const body: UpdateCategoryRequestBody = { name };
 
-      // カテゴリーの更新
       const res = await fetch(`/api/admin/categories/${id}`, {
         method: "PUT",
         headers: {
@@ -36,21 +68,24 @@ const page = () => {
       if (!res.ok) {
         throw new Error("カテゴリーの更新に失敗しました。");
       }
+      mutate();
       alert("カテゴリーを更新しました。");
     } catch (error) {
-      setError("カテゴリーの更新に失敗しました。");
+      alert("カテゴリーの更新に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // カテゴリーの削除
+  // ----- カテゴリーの削除 -----
   const handleDelete = async () => {
-    if (!confirm("カテゴリーを削除しますか？")) return;
+    const result = confirm("カテゴリーを削除しますか？");
+    if (!result) return;
     if (!token) return;
 
     try {
       setIsSubmitting(true);
+
       const res = await fetch(`/api/admin/categories/${id}`, {
         method: "DELETE",
         headers: {
@@ -61,46 +96,22 @@ const page = () => {
       if (!res.ok) {
         throw new Error("カテゴリーの削除に失敗しました。");
       }
+      mutate();
       alert("カテゴリーを削除しました。");
       router.push("/admin/categories");
     } catch (error) {
-      setError("カテゴリーの削除に失敗しました。");
+      alert("カテゴリーの削除に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  useEffect(() => {
-    if (!token) return;
-
-    const fetcher = async () => {
-      try {
-        const res = await fetch(`/api/admin/categories/${id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-        });
-        if (!res.ok) {
-          throw new Error("カテゴリーの取得に失敗しました。");
-        }
-        const data = await res.json();
-        setName(data.category.name);
-      } catch (error) {
-        setError("カテゴリーの取得に失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, [id, token]);
-
-  if (loading) {
+  if (isLoading) {
     return <p>カテゴリーを読み込み中です。</p>;
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <p>{error.message}</p>;
   }
 
   return (
