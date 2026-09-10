@@ -3,7 +3,7 @@ import { supabase } from "@/app/_libs/supabase";
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
-// ----- 管理者_記事一覧取得API -----
+// ----- 記事一覧取得のAPI -----
 
 export const GET = async (request: NextRequest) => {
   // GET関数の引数からrequestを受け取り、その中にAuthorizationヘッダーが含まれているので、それを取り出す
@@ -43,7 +43,7 @@ export const GET = async (request: NextRequest) => {
 
 // ----- 投稿作成時に送られてくるリクエスト -----
 
-//投稿作成時に送られてくるリクエストのbodyの型
+// 投稿作成時に送られてくるリクエストのbodyの型
 export type CreatePostRequestBody = {
   title: string;
   content: string;
