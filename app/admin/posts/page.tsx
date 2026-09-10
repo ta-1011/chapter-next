@@ -1,7 +1,7 @@
 "use client";
 
+import { PostIndexResponse } from "@/_types/post";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import { PostsIndexResponse } from "@/app/api/posts/route";
 import Link from "next/link";
 import useSWR from "swr";
 
@@ -11,7 +11,7 @@ const Page = () => {
   const fetcher = async ([url, token]: [
     string,
     string
-  ]): Promise<PostsIndexResponse> => {
+  ]): Promise<PostIndexResponse> => {
     const res = await fetch(url, {
       headers: {
         "Content-type": "application/json",
@@ -25,7 +25,7 @@ const Page = () => {
   };
 
   const { data, error, isLoading } = useSWR<
-    PostsIndexResponse,
+    PostIndexResponse,
     Error,
     [string, string] | null
   >(token ? ["/api/admin/posts", token] : null, fetcher);

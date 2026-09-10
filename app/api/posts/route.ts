@@ -1,23 +1,8 @@
+import { PostIndexResponse } from "@/_types/post";
 import { prisma } from "@/app/_libs/prisma";
 import { NextResponse } from "next/server";
 
 // 投稿一覧APIのレスポンス
-export type PostsIndexResponse = {
-  posts: {
-    id: number;
-    title: string;
-    content: string;
-    thumbnailImageKey: string;
-    createdAt: Date;
-    updatedAt: Date;
-    postCategories: {
-      category: {
-        id: number;
-        name: string;
-      };
-    }[];
-  }[];
-};
 
 export const GET = async () => {
   try {
@@ -46,7 +31,7 @@ export const GET = async () => {
     console.log(posts);
 
     // レスポンスを返す
-    return NextResponse.json<PostsIndexResponse>({ posts }, { status: 200 });
+    return NextResponse.json<PostIndexResponse>({ posts }, { status: 200 });
   } catch (error) {
     if (error instanceof Error)
       return NextResponse.json({ message: error.message }, { status: 400 });
