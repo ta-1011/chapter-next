@@ -4,23 +4,30 @@ import {
   Category,
   UpdatePostRequestBody,
 } from "@/app/api/admin/posts/[id]/route";
-import { PostShowResponse } from "@/_types/post";
+import { PostFormValues, PostShowResponse } from "@/_types/post";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import PostForm from "../_components/PostForm";
 import useSWR from "swr";
+import { useForm } from "react-hook-form";
 
 const Page = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
-  const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { id } = useParams();
   const router = useRouter();
-
   const { token } = useSupabaseSession();
+
+  // UIコンポーネント側で値をセットするもの（画像アップロードやカテゴリ選択）などはsetValueとwatchを使用する
+  const { register, handleSubmit, reset, setValue, watch } =
+    useForm<PostFormValues>({
+      defaultValues: {
+        title: "",
+        content: "",
+        thumbnailImageKey: "",
+        categories: [],
+      },
+    });
 
   const fetcher = async ([url, token]: [
     string,
@@ -44,42 +51,39 @@ const Page = () => {
     [string, string] | null
   >(token ? [`/api/admin/posts/${id}`, token] : null, fetcher);
 
+  // ----- react-hook-formで編集フォームを作成する時はresetを使う -----
   useEffect(() => {
     if (data) {
-      setTitle(data.post.title);
-      setContent(data.post.content);
-      setThumbnailImageKey(data.post.thumbnailImageKey);
-      setCategories(data.post.postCategories.map((c) => c.category));
+      reset({
+        title: data.post.title,
+        content: data.post.content,
+        thumbnailImageKey: data.post.thumbnailImageKey,
+        categories: data.post.postCategories.map((c) => c.category),
+      });
     }
-  }, [data]);
+  }, [data, reset]);
 
   // ----- 記事の更新 -----
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault(); // フォームのデフォルトの動作をキャンセル。
+  const onSubmit = async (values: PostFormValues) => {
     if (!token) return;
 
     try {
       setIsSubmitting(true);
-      const body: UpdatePostRequestBody = {
-        title,
-        content,
-        thumbnailImageKey,
-        categories,
-      };
+
       const res = await fetch(`/api/admin/posts/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: token,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(values),
       });
       if (!res.ok) {
         throw new Error("記事の更新に失敗しました。");
       }
       mutate();
       alert("記事を更新しました。");
-    } catch (error) {
+    } catch (err) {
       alert("記事の更新に失敗しました。");
     } finally {
       setIsSubmitting(false);
@@ -107,7 +111,7 @@ const Page = () => {
       mutate();
       alert("記事を削除しました。");
       router.push("/admin/posts");
-    } catch (error) {
+    } catch (err) {
       alert("記事の削除に失敗しました。");
     } finally {
       setIsSubmitting(false);
@@ -129,15 +133,10 @@ const Page = () => {
       </div>
       <PostForm
         mode="edit"
-        title={title}
-        setTitle={setTitle}
-        content={content}
-        setContent={setContent}
-        thumbnailImageKey={thumbnailImageKey}
-        setThumbnailImageKey={setThumbnailImageKey}
-        categories={categories}
-        setCategories={setCategories}
-        onSubmit={handleSubmit}
+        register={register}
+        setValue={setValue}
+        watch={watch}
+        onSubmit={handleSubmit(onSubmit)}
         onDelete={handleDelete}
         disabled={isSubmitting}
       />

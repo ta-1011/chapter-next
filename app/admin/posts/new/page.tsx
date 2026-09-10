@@ -1,46 +1,39 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import PostForm from "../_components/PostForm";
-import { Category } from "@/app/api/admin/posts/[id]/route";
 import { useRouter } from "next/navigation";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
-import {
-  CreatePostRequestBody,
-  CreatePostResponse,
-} from "@/app/api/admin/posts/route";
+import { CreatePostResponse } from "@/app/api/admin/posts/route";
+import { PostFormValues } from "@/_types/post";
+import { useForm } from "react-hook-form";
 
 const page = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [thumbnailImageKey, setThumbnailImageKey] = useState(
-    "https://placehold.jp/800x400.png"
-  );
-  const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { token } = useSupabaseSession();
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!token) return;
+  const { register, handleSubmit, reset, setValue, watch } =
+    useForm<PostFormValues>({
+      defaultValues: {
+        title: "",
+        content: "",
+        thumbnailImageKey: "",
+        categories: [],
+      },
+    });
 
+  const onSubmit = async (values: PostFormValues) => {
+    if (!token) return;
     try {
       setIsSubmitting(true);
-      const body: CreatePostRequestBody = {
-        title,
-        content,
-        thumbnailImageKey,
-        categories,
-      };
       const res = await fetch("/api/admin/posts", {
         method: "POST",
         headers: {
           "Content-type": "application/json",
           Authorization: token,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(values),
       });
       if (!res.ok) {
         throw new Error("記事の作成に失敗しました。");
@@ -50,16 +43,12 @@ const page = () => {
       alert("記事を作成しました。");
       // 作成が終えたらその記事idページに遷移します。
       router.push(`/admin/posts/${data.id}`);
-    } catch (error) {
-      setError("記事の作成に失敗しました。");
+    } catch (err) {
+      alert("記事の作成に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  if (error) {
-    return <p>{error}</p>;
-  }
 
   return (
     <div className="container mx-auto px-4">
@@ -68,15 +57,10 @@ const page = () => {
       </div>
       <PostForm
         mode="new"
-        title={title}
-        setTitle={setTitle}
-        content={content}
-        setContent={setContent}
-        thumbnailImageKey={thumbnailImageKey}
-        setThumbnailImageKey={setThumbnailImageKey}
-        categories={categories}
-        setCategories={setCategories}
-        onSubmit={handleSubmit}
+        register={register}
+        setValue={setValue}
+        watch={watch}
+        onSubmit={handleSubmit(onSubmit)}
         disabled={isSubmitting}
       />
     </div>

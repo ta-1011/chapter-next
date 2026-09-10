@@ -5,17 +5,18 @@ import React, { ChangeEvent, useEffect, useState } from "react";
 import { CategoriesSelect } from "./CategoriesSelect";
 import { v4 as uuidv4 } from "uuid"; // 固有IDを生成するライブラリ
 import { supabase } from "@/app/_libs/supabase";
+import {
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+} from "react-hook-form";
+import { PostFormValues } from "@/_types/post";
 
 export type Props = {
   mode: "new" | "edit";
-  title: string;
-  setTitle: (title: string) => void;
-  content: string;
-  setContent: (content: string) => void;
-  thumbnailImageKey: string;
-  setThumbnailImageKey: (thumbnailImageKey: string) => void;
-  categories: Category[];
-  setCategories: (categories: Category[]) => void;
+  register: UseFormRegister<PostFormValues>;
+  setValue: UseFormSetValue<PostFormValues>;
+  watch: UseFormWatch<PostFormValues>;
   onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
   onDelete?: () => void; //新規ページでは削除は不要のため?は必要
   disabled: boolean;
@@ -23,14 +24,9 @@ export type Props = {
 
 const PostForm = ({
   mode,
-  title,
-  content,
-  thumbnailImageKey,
-  categories,
-  setTitle,
-  setContent,
-  setThumbnailImageKey,
-  setCategories,
+  register,
+  setValue,
+  watch,
   onSubmit,
   onDelete,
   disabled,
@@ -39,6 +35,10 @@ const PostForm = ({
   const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
     null
   );
+
+  // ----- 現在のフォーム値を取り出す -----
+  const thumbnailImageKey = watch("thumbnailImageKey");
+  const categories = watch("categories");
 
   useEffect(() => {
     if (!thumbnailImageKey) return;
@@ -79,8 +79,8 @@ const PostForm = ({
     if (error) {
       return alert(error.message);
     }
-    // data.pathに、画像固有のkeyが入っているので、thumbnailImageKeyに格納する
-    setThumbnailImageKey(data.path);
+    // data.pathに、画像固有のkeyが入っているので、フォームの値にセット
+    setValue("thumbnailImageKey", data.path);
   };
 
   return (
@@ -97,8 +97,7 @@ const PostForm = ({
             disabled={disabled}
             type="text"
             id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            {...register("title")}
             className="mt-1 block w-full rounded-md border border-gray-200 p-3"
           />
         </div>
@@ -111,8 +110,7 @@ const PostForm = ({
           </label>
           <textarea
             id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            {...register("content")}
             className="mt-1 block w-full rounded-md border border-gray-200 p-3"
           />
         </div>
@@ -136,7 +134,9 @@ const PostForm = ({
           <label htmlFor="categories">カテゴリー</label>
           <CategoriesSelect
             selectedCategories={categories}
-            setSelectedCategories={setCategories}
+            setSelectedCategories={(c: Category[]) => {
+              setValue("categories", c);
+            }}
             disabled={disabled}
           />
         </div>
