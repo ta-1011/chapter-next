@@ -1,38 +1,88 @@
 "use client";
 
 import { Category } from "@/app/api/admin/posts/[id]/route";
-import React from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { CategoriesSelect } from "./CategoriesSelect";
+import { v4 as uuidv4 } from "uuid"; // 固有IDを生成するライブラリ
+import { supabase } from "@/app/_libs/supabase";
+import {
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+} from "react-hook-form";
+import { PostFormValues } from "@/_types/post";
 
 export type Props = {
   mode: "new" | "edit";
-  title: string;
-  setTitle: (title: string) => void;
-  content: string;
-  setContent: (content: string) => void;
-  thumbnailUrl: string;
-  setThumbnailUrl: (thumbnailUrl: string) => void;
-  categories: Category[];
-  setCategories: (categories: Category[]) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  register: UseFormRegister<PostFormValues>;
+  setValue: UseFormSetValue<PostFormValues>;
+  watch: UseFormWatch<PostFormValues>;
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
   onDelete?: () => void; //新規ページでは削除は不要のため?は必要
   disabled: boolean;
 };
 
 const PostForm = ({
   mode,
-  title,
-  content,
-  thumbnailUrl,
-  categories,
-  setTitle,
-  setContent,
-  setThumbnailUrl,
-  setCategories,
+  register,
+  setValue,
+  watch,
   onSubmit,
   onDelete,
   disabled,
 }: Props) => {
+  // Imageタグのsrcにセットする画像URLを持たせるstate
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
+    null
+  );
+
+  // ----- 現在のフォーム値を取り出す -----
+  const thumbnailImageKey = watch("thumbnailImageKey");
+  const categories = watch("categories");
+
+  useEffect(() => {
+    if (!thumbnailImageKey) return;
+
+    //アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
+    const fetcher = async () => {
+      const {
+        data: { publicUrl },
+      } = await supabase.storage
+        .from("post_thumbnail")
+        .getPublicUrl(thumbnailImageKey);
+      setThumbnailImageUrl(publicUrl);
+    };
+
+    fetcher();
+  }, [thumbnailImageKey]);
+
+  const handleImageChange = async (
+    e: ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    if (!e.target.files || e.target.files.length == 0) {
+      // 画像が選択されていないのでreturn
+      return;
+    }
+
+    const file = e.target.files[0]; // 選択された画像を取得
+    const filePath = `private/${uuidv4()}`; // ファイルパスを指定（private/がないと保存できないような設定になっています。）
+
+    // Supabaseに画像をアップロード
+    const { data, error } = await supabase.storage
+      .from("post_thumbnail") // ()の中はバケット名を指定
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    // アップロードに失敗したらエラーを表示して終了
+    if (error) {
+      return alert(error.message);
+    }
+    // data.pathに、画像固有のkeyが入っているので、フォームの値にセット
+    setValue("thumbnailImageKey", data.path);
+  };
+
   return (
     <>
       <form onSubmit={onSubmit} className="space-y-4">
@@ -46,9 +96,8 @@ const PostForm = ({
           <input
             disabled={disabled}
             type="text"
-            id={title}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            id="title"
+            {...register("title")}
             className="mt-1 block w-full rounded-md border border-gray-200 p-3"
           />
         </div>
@@ -61,32 +110,33 @@ const PostForm = ({
           </label>
           <textarea
             id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            {...register("content")}
             className="mt-1 block w-full rounded-md border border-gray-200 p-3"
           />
         </div>
         <div>
           <label
-            htmlFor="thumbnailUrl"
+            htmlFor="thumbnailImageKey"
             className="block text-sm font-medium text-gray-700"
           >
             サムネイルURL
           </label>
           <input
-            disabled={disabled}
-            type="text"
-            id={thumbnailUrl}
-            value={thumbnailUrl}
-            onChange={(e) => setThumbnailUrl(e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-200 p-3"
+            disabled={disabled}
+            type="file"
+            id="thumbnailImageKey"
+            onChange={handleImageChange}
+            accept="image/*"
           />
         </div>
         <div>
           <label htmlFor="categories">カテゴリー</label>
           <CategoriesSelect
             selectedCategories={categories}
-            setSelectedCategories={setCategories}
+            setSelectedCategories={(c: Category[]) => {
+              setValue("categories", c);
+            }}
             disabled={disabled}
           />
         </div>

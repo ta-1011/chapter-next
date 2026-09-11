@@ -4,107 +4,126 @@ import {
   Category,
   UpdatePostRequestBody,
 } from "@/app/api/admin/posts/[id]/route";
-import { PostShowResponse } from "@/_types/post";
+import { PostFormValues, PostShowResponse } from "@/_types/post";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import PostForm from "../_components/PostForm";
+import useSWR from "swr";
+import { useForm } from "react-hook-form";
 
 const Page = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
-  const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [actionError, setActionError] = useState<string | null>(null); //記事更新・削除用
-  const [fetchError, setFetchError] = useState<string | null>(null); //記事取得用
   const { id } = useParams();
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
-  //記事更新
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // フォームのデフォルトの動作をキャンセル。
+  // UIコンポーネント側で値をセットするもの（画像アップロードやカテゴリ選択）などはsetValueとwatchを使用する
+  const { register, handleSubmit, reset, setValue, watch } =
+    useForm<PostFormValues>({
+      defaultValues: {
+        title: "",
+        content: "",
+        thumbnailImageKey: "",
+        categories: [],
+      },
+    });
+
+  const fetcher = async ([url, token]: [
+    string,
+    string
+  ]): Promise<PostShowResponse> => {
+    const res = await fetch(url, {
+      headers: {
+        "Content-type": "application/json",
+        Authorization: token,
+      },
+    });
+    if (!res.ok) {
+      throw new Error("記事の取得に失敗しました。");
+    }
+    return res.json();
+  };
+
+  const { data, error, isLoading, mutate } = useSWR<
+    PostShowResponse,
+    Error,
+    [string, string] | null
+  >(token ? [`/api/admin/posts/${id}`, token] : null, fetcher);
+
+  // ----- react-hook-formで編集フォームを作成する時はresetを使う -----
+  useEffect(() => {
+    if (data) {
+      reset({
+        title: data.post.title,
+        content: data.post.content,
+        thumbnailImageKey: data.post.thumbnailImageKey,
+        categories: data.post.postCategories.map((c) => c.category),
+      });
+    }
+  }, [data, reset]);
+
+  // ----- 記事の更新 -----
+  const onSubmit = async (values: PostFormValues) => {
+    if (!token) return;
 
     try {
       setIsSubmitting(true);
-      const body: UpdatePostRequestBody = {
-        title,
-        content,
-        thumbnailUrl,
-        categories,
-      };
+
       const res = await fetch(`/api/admin/posts/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(values),
       });
       if (!res.ok) {
         throw new Error("記事の更新に失敗しました。");
       }
+      mutate();
       alert("記事を更新しました。");
-    } catch (error) {
-      setActionError("記事の更新に失敗しました。");
+    } catch (err) {
+      alert("記事の更新に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  //記事削除
+  // ----- 記事削除 -----
   const handleDelete = async () => {
-    if (!confirm("記事を削除しますか？")) {
-      return;
-    }
+    const result = confirm("記事を削除しますか？");
+    if (!result) return;
+    if (!token) return;
+
     try {
       setIsSubmitting(true);
       const res = await fetch(`/api/admin/posts/${id}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
       });
       if (!res.ok) {
         throw new Error("記事の削除に失敗しました。");
       }
+      mutate();
       alert("記事を削除しました。");
-      router.push("/admin/posts"); // useRouterを使うことで、confirmがtrueになれば該当ページに戻る
-    } catch (error) {
-      setActionError("記事の削除に失敗しました。");
+      router.push("/admin/posts");
+    } catch (err) {
+      alert("記事の削除に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // useEffectの記述
-  useEffect(() => {
-    const fetcher = async () => {
-      try {
-        const res = await fetch(`/api/admin/posts/${id}`);
-        if (!res.ok) {
-          throw new Error("記事の取得に失敗しました。");
-        }
-        const { post }: PostShowResponse = await res.json();
-        setTitle(post.title);
-        setContent(post.content);
-        setThumbnailUrl(post.thumbnailUrl);
-        setCategories(post.postCategories.map((item) => item.category));
-      } catch (error) {
-        setFetchError("記事の取得に失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher(); // ここで関数を呼ぶこと忘れずに
-  }, [id]);
-
-  if (loading) {
+  if (isLoading) {
     return <p>記事を読み込み中です。</p>;
   }
 
-  if (actionError) {
-    return <p>{actionError}</p>;
-  }
-
-  if (fetchError) {
-    return <p>{fetchError}</p>;
+  if (error) {
+    return <p>{error.message}</p>;
   }
 
   return (
@@ -114,15 +133,10 @@ const Page = () => {
       </div>
       <PostForm
         mode="edit"
-        title={title}
-        setTitle={setTitle}
-        content={content}
-        setContent={setContent}
-        thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
-        categories={categories}
-        setCategories={setCategories}
-        onSubmit={handleSubmit}
+        register={register}
+        setValue={setValue}
+        watch={watch}
+        onSubmit={handleSubmit(onSubmit)}
         onDelete={handleDelete}
         disabled={isSubmitting}
       />

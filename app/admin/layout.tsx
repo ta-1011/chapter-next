@@ -1,25 +1,49 @@
+// 管理者ページの共通レイアウトコンポーネント
 "use client";
-import Link from "next/link";
+
 import { ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useRouteGuard } from "./_hooks/useRouteGuard";
 
 type Props = {
   children: ReactNode;
 };
 
-const adminLayout = ({ children }: Props) => {
+const AdminLayout = ({ children }: Props) => {
+  useRouteGuard();
+
+  const pathname = usePathname();
+  const isSelected = (href: string) => {
+    return pathname.includes(href);
+  };
+
   return (
-    <>
-      <aside className="fixed bg-gray-100 w-70 left-0 bottom-0 top-16">
-        <Link href="/admin/posts" className="p-4 block hover:bg-blue-100">
+    <div className="flex flex-col md:block">
+      {/* サイドバー */}
+      <aside className="bg-gray-100 w-full md:fixed md:w-70 md:left-0 md:bottom-0 md:top-23">
+        <Link
+          href="/admin/posts"
+          className={`p-4 block hover:bg-blue-100 ${
+            isSelected("/admin/posts") && "bg-blue-100"
+          }`}
+        >
           記事一覧
         </Link>
-        <Link href="/admin/categories" className="p-4 block hover:bg-blue-100">
+        <Link
+          href="/admin/categories"
+          className={`p-4 block hover:bg-blue-100 ${
+            isSelected("/admin/categories") && "bg-blue-100"
+          }`}
+        >
           カテゴリー一覧
         </Link>
       </aside>
-      <div className="ml-70 p-4">{children}</div>
-    </>
+
+      {/* メインコンテンツ */}
+      <div className="p-4 md:ml-70">{children}</div>
+    </div>
   );
 };
 
-export default adminLayout;
+export default AdminLayout;

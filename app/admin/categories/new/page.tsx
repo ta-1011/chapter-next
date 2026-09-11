@@ -1,9 +1,10 @@
 "use client";
 
-import { CreateCategoryRequestBody } from "@/app/api/admin/categories/route";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CategoryForm } from "../_components/CategoryForm";
+import { CreateCategoryRequestBody } from "@/app/api/admin/categories/route";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 const page = () => {
   const [name, setName] = useState("");
@@ -11,8 +12,11 @@ const page = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { token } = useSupabaseSession();
+
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!token) return;
 
     const body: CreateCategoryRequestBody = { name };
 
@@ -23,12 +27,14 @@ const page = () => {
         method: "POST",
         headers: {
           "Content-type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify(body),
       });
       if (!res.ok) {
         throw new Error("カテゴリーの作成に失敗しました");
       }
+
       // 作成したカテゴリーのIDを取得
       const data = await res.json();
       alert("カテゴリーを作成しました。");

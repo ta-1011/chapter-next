@@ -1,39 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import { PostIndexResponse } from "@/_types/post";
+import Link from "next/link";
+import useSWR from "swr";
 
+const fetcher = async (url: string): Promise<PostIndexResponse> => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("記事の取得に失敗しました。");
+  }
+  return res.json();
+};
 const NewsIndex = () => {
-  const [posts, setPosts] = useState<PostIndexResponse["posts"]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error, isLoading } = useSWR<PostIndexResponse, Error, string>(
+    "/api/posts",
+    fetcher
+  );
 
-  useEffect(() => {
-    const fetcher = async () => {
-      try {
-        const res = await fetch(`/api/posts`);
-        if (!res.ok) {
-          throw new Error("記事の取得に失敗しました");
-        }
-        const { posts } = await res.json();
-        setPosts(posts);
-      } catch (error) {
-        setError("記事の取得に失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetcher();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <p>記事を読み込み中です。</p>;
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <p>{error.message}</p>;
   }
+
+  // posts に記事がない場合は[]を使う（常に配列として使えるように）
+  const posts = data?.posts ?? [];
 
   if (posts.length === 0) {
     return (
